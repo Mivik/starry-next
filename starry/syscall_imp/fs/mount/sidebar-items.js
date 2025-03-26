@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["check_mounted","mount_fat_fs","sys_mount","sys_umount2","umount_fat_fs"],"static":["MOUNTED"],"struct":["MountedFs"]};
