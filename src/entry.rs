@@ -1,6 +1,6 @@
-use alloc::{string::String, sync::Arc};
-use arceos_posix_api::FD_TABLE;
-use axfs::{CURRENT_DIR, CURRENT_DIR_PATH, api::set_current_dir};
+use alloc::{borrow::ToOwned, string::String, sync::Arc};
+use arceos_posix_api::{AT_FDCWD, FD_TABLE, with_fs};
+use axfs_ng::FS_CONTEXT;
 use axhal::arch::UspaceContext;
 use axprocess::{Pid, init_proc};
 use axsignal::Signo;
@@ -19,20 +19,25 @@ pub fn run_user_app(args: &[String], envs: &[String]) -> Option<i32> {
         })
         .expect("Failed to create user address space");
 
-    let exe_path = args[0].clone();
-    let (dir, name) = exe_path.rsplit_once('/').unwrap_or(("", &exe_path));
-    set_current_dir(dir).expect("Failed to set current dir");
+    let exe_path = &args[0];
+    let name = with_fs(AT_FDCWD, |fs| {
+        let entry = fs.resolve(exe_path)?;
+        let name = entry.name().to_owned();
+        fs.set_current_dir(entry.parent()?.unwrap())?;
+        Ok(name)
+    })
+    .expect("Failed to resolve executable path");
 
     let (entry_vaddr, ustack_top) = load_user_app(&mut uspace, args, envs)
         .unwrap_or_else(|e| panic!("Failed to load user app: {}", e));
 
     let uctx = UspaceContext::new(entry_vaddr.into(), ustack_top, 2333);
 
-    let mut task = new_user_task(name, uctx, None);
+    let mut task = new_user_task(&name, uctx, None);
     task.ctx_mut().set_page_table_root(uspace.page_table_root());
 
     let process_data = ProcessData::new(
-        exe_path,
+        exe_path.clone(),
         Arc::new(Mutex::new(uspace)),
         Arc::default(),
         Some(Signo::SIGCHLD),
@@ -41,12 +46,9 @@ pub fn run_user_app(args: &[String], envs: &[String]) -> Option<i32> {
     FD_TABLE
         .deref_from(&process_data.ns)
         .init_new(FD_TABLE.copy_inner());
-    CURRENT_DIR
+    FS_CONTEXT
         .deref_from(&process_data.ns)
-        .init_new(CURRENT_DIR.copy_inner());
-    CURRENT_DIR_PATH
-        .deref_from(&process_data.ns)
-        .init_new(CURRENT_DIR_PATH.copy_inner());
+        .init_new(FS_CONTEXT.copy_inner());
 
     let tid = task.id().as_u64() as Pid;
     let process = init_proc().fork(tid).data(process_data).build();

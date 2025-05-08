@@ -8,13 +8,14 @@ repository.workspace = true
 
 [dependencies]
 axconfig.workspace = true
-axfs.workspace = true
+axfs-ng.workspace = true
 axhal.workspace = true
 axlog.workspace = true
 axmm.workspace = true
 axns.workspace = true
 axsync.workspace = true
 axtask.workspace = true
+arceos_posix_api.workspace = true
 
 axprocess.workspace = true
 axsignal.workspace = true

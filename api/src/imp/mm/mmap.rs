@@ -144,14 +144,14 @@ pub fn sys_mmap(
             .into_any()
             .downcast::<arceos_posix_api::File>()
             .map_err(|_| LinuxError::EBADF)?;
-        let file = file.inner().lock();
+        let mut file = file.inner().lock();
         if offset < 0 || offset as usize >= file_size {
             return Err(LinuxError::EINVAL);
         }
         let offset = offset as usize;
         let length = core::cmp::min(length, file_size - offset);
         let mut buf = vec![0u8; length];
-        file.read_at(offset as u64, &mut buf)?;
+        file.read_at(&mut buf, offset as u64)?;
         aspace.write(start_addr, &buf)?;
     }
     Ok(start_addr.as_usize() as _)

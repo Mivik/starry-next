@@ -35,6 +35,5 @@ pub fn sys_openat(
 }
 
 pub fn sys_open(path: UserConstPtr<c_char>, flags: i32, modes: mode_t) -> LinuxResult<isize> {
-    use arceos_posix_api::AT_FDCWD;
-    sys_openat(AT_FDCWD as _, path, flags, modes)
+    sys_openat(arceos_posix_api::AT_FDCWD as _, path, flags, modes)
 }
