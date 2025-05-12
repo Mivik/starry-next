@@ -136,15 +136,13 @@ pub fn sys_getdents64(fd: i32, buf: UserPtr<c_void>, len: usize) -> LinuxResult<
     let mut count = 0;
     let mut dir_offset = 0;
     dir.inner()
-        .as_dir()?
-        .read_dir(*offset, &mut |entry: DirEntry<RawMutex>, offset| {
-            let name = entry.name();
+        .read_dir(*offset, &mut |name: &str, ino, node_type, offset| {
             let entry_size = DirEnt::FIXED_SIZE + name.len() + 1;
             if !buffer.can_fit_entry(entry_size) {
                 return false;
             }
 
-            let dirent = DirEnt::new(entry.inode(), offset as _, entry_size, entry.node_type());
+            let dirent = DirEnt::new(ino, offset as _, entry_size, node_type);
 
             if buffer.write_entry(dirent, name.as_bytes()).is_err() {
                 return false;
@@ -180,7 +178,7 @@ pub fn sys_linkat(
     let (new_dir, new_name) =
         with_fs(new_dirfd, |fs| Ok(fs.resolve_nonexistent(new_path.into())?))?;
 
-    new_dir.as_dir()?.link(new_name, &old)?;
+    new_dir.link(new_name, &old)?;
     Ok(0)
 }
 

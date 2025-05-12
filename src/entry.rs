@@ -23,7 +23,7 @@ pub fn run_user_app(args: &[String], envs: &[String]) -> Option<i32> {
     let name = with_fs(AT_FDCWD, |fs| {
         let entry = fs.resolve(exe_path)?;
         let name = entry.name().to_owned();
-        fs.set_current_dir(entry.parent()?.unwrap())?;
+        fs.set_current_dir(entry.parent().unwrap())?;
         Ok(name)
     })
     .expect("Failed to resolve executable path");

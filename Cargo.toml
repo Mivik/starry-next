@@ -42,7 +42,7 @@ axprocess = { git = "https://github.com/Starry-OS/axprocess.git" }
 axsignal = { git = "https://github.com/Starry-OS/axsignal.git", rev = "7352c08" }
 
 axfs-ng = { git = "https://github.com/oscomp/arceos.git" }
-axfs-ng-vfs = { git = "https://github.com/Mivik/axfs-ng-vfs", rev = "df6495a" }
+axfs-ng-vfs = { git = "https://github.com/Mivik/axfs-ng-vfs", rev = "6c50d6a" }
 
 axerrno = "0.1"
 bitflags = "2.6"
